@@ -1,6 +1,5 @@
 {
   "default_agent": "0x",
-  "plugin": ["./plugins/chain-forge"],
   "plugins": ["./plugins/chain-forge"],
   "agent": {
     "0x": {
