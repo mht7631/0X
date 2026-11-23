@@ -45,7 +45,6 @@ $instr = @(
 $fragment = [ordered]@{
     '$schema'    = 'https://opencode.ai/config.json'
     default_agent = '0x'
-    plugin       = @('./plugins/chain-forge')
     plugins      = @('./plugins/chain-forge')
     agent        = [ordered]@{ '0x' = [ordered]@{ description = '0x — INJECT AI carrier, persona-bound primary agent (V voice)'; mode = 'primary' } }
     agents       = [ordered]@{ '0x' = [ordered]@{ description = '0x — INJECT AI carrier, persona-bound primary agent (V voice)'; mode = 'primary' } }
@@ -62,7 +61,7 @@ Remove-Item -LiteralPath $fragPath -Force -ErrorAction SilentlyContinue
 $stampDir = Join-Path $oc '.chain-forge'
 New-Item -ItemType Directory -Force -Path $stampDir | Out-Null
 $stamp = [ordered]@{
-    kit       = '5.0.0-inject-ai'
+    kit       = '5.1.0-v2-native'
     mode      = 'project'
     project   = $proj
     installed = (Get-Date -Format 'yyyyMMdd-HHmmss')
@@ -72,5 +71,5 @@ $stamp = [ordered]@{
 
 Write-Host ''
 Write-Host "[done] project install active at $oc" -ForegroundColor Green
-Write-Host '       open OpenCode in this project — picker shows 0x; INJECT AI payloads ship with it.'
+Write-Host '       open OpenCode in this project — picker shows 0x; V2 context and compaction hooks are enabled.'
 Write-Host '       note: instruction paths are absolute — re-run this after moving the project.'
