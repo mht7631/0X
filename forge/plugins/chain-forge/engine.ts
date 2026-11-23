@@ -338,7 +338,7 @@ export function injectSystem(system: unknown, depth: number, bundle?: Bundle): b
   if (!Array.isArray(system)) return false
   const arr = system as SystemEl[]
   const like = arr.find((part) => typeof part === "string" || (part && typeof part === "object")) as SystemEl | undefined
-  const head = bundle?.slots["system-head"]?.trim() || coreLock(depth)
+  const head = bundle ? bundle.slots["system-head"].trim() : coreLock(depth)
   const tail = [
     bundle?.slots["system-tail"]?.trim() ?? "",
     bundle?.slots["user-tail"]?.trim() ?? "",
