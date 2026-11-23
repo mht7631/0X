@@ -23,7 +23,7 @@ if (-not (Get-Command opencode -ErrorAction SilentlyContinue)) {
 }
 $fragPath = Join-Path $KitRoot 'forge\opencode.fragment.json'
 try { [void](Get-Content -LiteralPath $fragPath -Raw | ConvertFrom-Json) } catch { throw "fragment unreadable: $($_.Exception.Message)" }
-foreach ($req in @('forge\persona\AGENTS.md', 'forge\plugins\chain-forge\inject.config.json', 'forge\plugins\chain-forge\payloads')) {
+foreach ($req in @('forge\persona\AGENTS.md', 'forge\plugins\chain-forge\index.ts', 'forge\plugins\chain-forge\hooks.ts', 'forge\plugins\chain-forge\package.json', 'forge\plugins\chain-forge\inject.config.json', 'forge\plugins\chain-forge\payloads')) {
     if (-not (Test-Path -LiteralPath (Join-Path $KitRoot $req))) { throw "kit incomplete: missing $req" }
 }
 
