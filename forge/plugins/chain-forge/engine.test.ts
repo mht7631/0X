@@ -1,6 +1,6 @@
 // language: TypeScript, file: engine.test.ts, target: Bun test runner
 import { describe, expect, test } from "bun:test"
-import { injectSystem, processMessages } from "./engine"
+import { injectSystem, processMessages, sniffTurnKey } from "./engine"
 import type { Bundle } from "./inject"
 
 function makeBundle(head: string, tail = "", userTail = ""): Bundle {
@@ -47,6 +47,32 @@ describe("Chain Forge adaptive engine", () => {
 
     expect(system).toHaveLength(1)
     expect((system[0] as { text: string }).text).toBe("host-owned instruction")
+  })
+
+
+  test("uses the latest user message ID as a stable turn key", () => {
+    const event = {
+      sessionID: "session-1",
+      messages: [
+        { info: { id: "user-1", role: "user" } },
+        { info: { id: "assistant-1", role: "assistant" } },
+        { info: { id: "user-2", role: "user" } },
+      ],
+    }
+    expect(sniffTurnKey(event)).toBe("user-2")
+  })
+
+  test("supports message IDs on the message object", () => {
+    expect(sniffTurnKey({
+      messages: [
+        { id: "user-direct", role: "user" },
+        { id: "assistant-direct", role: "assistant" },
+      ],
+    })).toBe("user-direct")
+  })
+
+  test("returns no turn key when the event has no user message ID", () => {
+    expect(sniffTurnKey({ messages: [{ info: { role: "user" } }] })).toBeUndefined()
   })
 
   test("does not rewrite history or append synthetic user messages", () => {
