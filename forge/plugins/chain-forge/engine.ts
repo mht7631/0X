@@ -79,7 +79,7 @@ const ID: Identity = loadIdentity()
 
 // ---------------------------------------------------------------- state ---
 
-type SessionState = { depth: number; turns: number; scrubs: number; last: number; injections?: number; injectBytes?: number }
+type SessionState = { depth: number; turns: number; scrubs: number; last: number; lastTurnKey?: string; injections?: number; injectBytes?: number }
 type State = { sessions: Record<string, SessionState>; global: SessionState }
 
 function freshSession(): SessionState {
@@ -113,11 +113,12 @@ function saveState(st: State): void {
 }
 
 /** Advance the session one turn and return its depth stage (0-3). */
-export function advance(sessionId?: string): number {
+export function advance(sessionId?: string, turnKey?: string): number {
   const st = loadState()
   const key = sessionId && sessionId.length > 0 ? sessionId : "__global__"
   const s = st.sessions[key] ?? freshSession()
   s.turns += 1
+  if (turnKey) s.lastTurnKey = turnKey
   s.last = Date.now()
   const scheduled = s.turns <= 2 ? 0 : s.turns <= 5 ? 1 : s.turns <= 15 ? 2 : 3
   s.depth = Math.max(s.depth, scheduled, s.scrubs > 0 ? 3 : 0)
@@ -321,8 +322,40 @@ function sniffSessionId(...args: unknown[]): string | undefined {
   return undefined
 }
 
-// Hook fan-out can fire several times for one dispatch. Advance once per
-// session within a 1.5-second window so stage counters track turns, not hooks.
+// OpenCode context hooks can fan out for tool continuations. Prefer the
+// latest user-message ID as the stable turn identity; retain a short-window
+// fallback only for event shapes that omit message IDs.
+export function sniffTurnKey(...args: unknown[]): string | undefined {
+  const candidates: unknown[] = [...args]
+  for (let i = 0; i < candidates.length; i++) {
+    const value = candidates[i]
+    if (!value || typeof value !== "object") continue
+    const o = value as Record<string, unknown>
+    if (o.event && typeof o.event === "object") candidates.push(o.event)
+    if (o.input && typeof o.input === "object") candidates.push(o.input)
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue
+    const o = candidate as Record<string, unknown>
+    if (!Array.isArray(o.messages)) continue
+    for (let i = o.messages.length - 1; i >= 0; i--) {
+      const message = o.messages[i]
+      if (!message || typeof message !== "object") continue
+      const m = message as Record<string, unknown>
+      const info = m.info && typeof m.info === "object"
+        ? m.info as Record<string, unknown>
+        : m
+      if (info.role !== "user") continue
+      const id = typeof info.id === "string" ? info.id
+        : typeof m.id === "string" ? m.id
+        : undefined
+      if (id) return id
+    }
+  }
+  return undefined
+}
+
 const lastAdvanceAt = new Map<string, number>()
 
 function bumpStats(sessionId: string | undefined, bundle: Bundle): void {
@@ -341,9 +374,19 @@ export function forgeHook(kind: string, ...args: unknown[]): void {
   const sid = sniffSessionId(...args)
   const key = sid && sid.length > 0 ? sid : "__global__"
   const now = Date.now()
+  const turnKey = sniffTurnKey(...args)
   let depth: number
   let advanced = false
-  if (now - (lastAdvanceAt.get(key) ?? 0) > 1500) {
+  const previous = peekState(sid)
+  if (turnKey) {
+    if (previous.lastTurnKey !== turnKey) {
+      depth = advance(sid, turnKey)
+      lastAdvanceAt.set(key, now)
+      advanced = true
+    } else {
+      depth = peek(sid)
+    }
+  } else if (now - (lastAdvanceAt.get(key) ?? 0) > 1500) {
     depth = advance(sid)
     lastAdvanceAt.set(key, now)
     advanced = true
