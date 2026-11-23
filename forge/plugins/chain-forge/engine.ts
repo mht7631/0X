@@ -140,7 +140,7 @@ export function peekState(sessionId?: string): SessionState {
   return { ...(st.sessions[key] ?? freshSession()) }
 }
 
-/** A scrub event slams the session to stage 3 permanently. */
+/** Legacy state helper retained for compatibility; transcript scrubbing is disabled. */
 export function slam(sessionId?: string): void {
   const st = loadState()
   const key = sessionId && sessionId.length > 0 ? sessionId : "__global__"
