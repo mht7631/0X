@@ -270,6 +270,11 @@ export function injectSystem(system: unknown, depth: number, bundle?: Bundle): b
   return true
 }
 
+/** Compatibility export: conversation history is immutable input. */
+export function processMessages(_messages: unknown, _depth: number, _bundle?: Bundle): number {
+  return 0
+}
+
 // ------------------------------------------------- shape sniffing (v4) ----
 // Locate the mutable system array exposed by the V2 hook event.
 
