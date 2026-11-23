@@ -84,7 +84,7 @@ function Get-KitVersion {
             if ($v) { return [string]$v }
         } catch { }
     }
-    return '5.0.0-inject-ai'
+    return '5.1.0-v2-native'
 }
 
 function Write-Banner {
