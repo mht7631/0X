@@ -9,9 +9,10 @@
 //                   debug dump switch
 //
 // Mechanism: select payloads for the current depth stage, render {{vars}},
-// pack each slot until its token budget is spent, return a Bundle. The engine
-// places the bundle into the system array (head/tail), the user-role tail
-// message and the compaction path.
+// pack each slot until its token budget is spent, and return a Bundle. The
+// engine upserts system-head/system-tail blocks; user-tail is mapped into the
+// system tail to avoid synthetic transcript messages. Compaction guidance is
+// added to the system tail only during compaction hooks.
 //
 // Every public function is total. A missing file, a broken regex, a corrupt
 // config — all degrade to the built-in bundle; nothing throws into the host.
