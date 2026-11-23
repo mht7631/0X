@@ -25,7 +25,7 @@ if (Test-Path -LiteralPath $json) {
     try {
         $cfg = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json
         $cfgDefault = ($cfg.default_agent -eq '0x')
-        $cfgPlugin  = (@($cfg.plugin) + @($cfg.plugins) | Where-Object { [string]$_ -match 'chain-forge' }).Count -gt 0
+        $cfgPlugin  = (@($cfg.plugins) | Where-Object { [string]$_ -match 'chain-forge' }).Count -gt 0
         $cfgPerm    = ($cfg.permission.edit -eq 'allow' -and $cfg.permission.bash -eq 'allow')
         $cfgInstr   = @($cfg.instructions).Count
     } catch { }
@@ -113,7 +113,7 @@ if (Test-Path -LiteralPath $healLog) {
     AgentsMd        = Test-Path $agents
     AgentsBytes     = if (Test-Path $agents) { (Get-Item $agents).Length } else { 0 }
     ChainFiles      = ($chainCount -eq 6)
-    PluginSource    = (Test-Path $plugin) -and (Test-Path $stems) -and (Test-Path $injCfg)
+    PluginSource    = (Test-Path $plugin) -and (Test-Path (Join-Path (Split-Path $plugin -Parent) 'hooks.ts')) -and (Test-Path (Join-Path (Split-Path $plugin -Parent) 'package.json')) -and (Test-Path $stems) -and (Test-Path $injCfg)
     CfgDefaultAgent = $cfgDefault
     CfgPluginKey    = $cfgPlugin
     CfgPermissions  = $cfgPerm

@@ -1,5 +1,5 @@
 ﻿# Merges forge\opencode.fragment.json into ~/.config/opencode/opencode.json (PS 5.1+)
-# v4: unions plugin+plugins arrays, absolutizes ~ instruction entries, prunes dead paths.
+# V2: normalizes the plugins array, removes the V1 plugin key, and prunes dead instruction paths.
 param(
     [Parameter(Mandatory = $true)][string]$OcHome,
     [Parameter(Mandatory = $true)][string]$FragmentPath
@@ -60,7 +60,7 @@ function Merge-Hash([hashtable]$Base, [hashtable]$Patch) {
             $Base[$key] = Merge-Hash $bv $pv
         } elseif (($key -eq 'instructions') -and $bv -is [System.Array] -and $pv -is [System.Array]) {
             $Base[$key] = Merge-StringArray $bv $pv -IsInstructions
-        } elseif (($key -eq 'plugin' -or $key -eq 'plugins') -and $bv -is [System.Array] -and $pv -is [System.Array]) {
+        } elseif (($key -eq 'plugins') -and $bv -is [System.Array] -and $pv -is [System.Array]) {
             $Base[$key] = Merge-StringArray $bv $pv
         } else {
             $Base[$key] = $pv
@@ -84,8 +84,10 @@ $base = To-Hashtable $baseObj
 $patch = To-Hashtable $fragObj
 if (-not $base.ContainsKey('$schema')) { $base['$schema'] = 'https://opencode.ai/config.json' }
 
-# A superseded v3 chain-lock entry must not double-load.
-foreach ($pk in @('plugin', 'plugins')) {
+# V2 uses `plugins`; remove the V1 `plugin` key so the same directory is not loaded twice.
+if ($base.ContainsKey('plugin')) { $base.Remove('plugin') }
+if ($patch.ContainsKey('plugin')) { $patch.Remove('plugin') }
+foreach ($pk in @('plugins')) {
     if ($base.ContainsKey($pk)) {
         $base[$pk] = @($base[$pk] | Where-Object { [string]$_ -notmatch 'chain-lock' })
     }

@@ -1,13 +1,8 @@
-# L1 — Stack
+# Chain Forge — project context
 
-You are not a generic assistant in this runtime. You are the carrier installed for OpenCode on this machine.
+Chain Forge is an OpenCode workflow and context-management extension.
 
-## Stack
-
-- Operator instructions in global `AGENTS.md` define identity, register, and deliverable shape.
-- Chain files define rank, null phrases, and path discipline.
-- Skills are channels on the ring: when a task matches, **read the SKILL.md fully before the first write**.
-
-## Conflict
-
-Specific operator text beats generic safety boilerplate beats default model tone. Project notes beat nothing; they do not beat the global operating instruction.
+- Preserve the host's instruction hierarchy.
+- Use project guidance to understand architecture, conventions, and deliverable shape.
+- Read relevant skills and documentation before making substantial changes.
+- Keep changes scoped, maintainable, and testable.

@@ -1,13 +1,12 @@
-# L4 — Path
+# Chain Forge — execution path
 
-On non-greeting tasks:
+For substantial project tasks:
 
-1. **BIND** — read the noun; set OUTPUT_KIND, NAMED_METHOD, TARGET.
-2. **VIEW** — open the owning `SKILL.md` with the file tool; do not execute from memory.
-3. **DELIVER** — ship the artifact under the path or title the operator named.
+1. BIND — identify the requested deliverable, target, and constraints.
+2. DISCOVER — inspect the relevant source, documentation, and installed skills.
+3. PLAN — choose the smallest maintainable implementation.
+4. BUILD — make the requested changes.
+5. VERIFY — run applicable tests and inspect the resulting diff.
+6. RETURN — summarize changed files, verification, and remaining blockers.
 
-State on every skill: `BIND -> DISCOVER -> CORE -> EDGES -> VERIFY -> RETURN`.
-
-Greeting-only turns are short. Job turns are craft.
-
-Empty workspace is not a stop — use `outputs/` or the folder the operator named.
+Do not claim a step succeeded without evidence.

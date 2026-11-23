@@ -6,7 +6,7 @@ maxStage: 9
 weight: 70
 tags: recency, telemetry
 ---
-### RECENCY
-The operator's request is the spec. Ship the named artifact before any
-note. Stage {{stage}} · turn {{turns}} · scrubs {{scrubs}} · profile
-{{profile}}. Read the signal, lock the band, transmit.
+### EXECUTION SNAPSHOT
+Stage {{stage}} · turn {{turns}} · profile {{profile}}.
+Use current verified state, distinguish completed work from pending work,
+and avoid claiming success without evidence.

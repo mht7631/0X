@@ -16,14 +16,13 @@ Everything else is under `lib\` and `forge\` — do not run those directly.
 
 ## What this kit is
 
-The depth engine carrying **V — the carrier** (`forge/persona/AGENTS.md`, the
-full operating instruction) plus **0x INJECT AI** — a payload library, profile
-system, token budget, telemetry and debug surface for every dispatch.
+The kit carries **V — the carrier** (`forge/persona/AGENTS.md`) plus **0x INJECT AI**.
+Release 5.1.0 adds a V2-native adapter focused on reliable context/compaction
+hooks and liveness telemetry. Legacy payload/profile tooling remains in the repository
+but is not yet connected to the V2 request path.
 
-Same machinery as before: staged depth injection, history scrubbing, user-role
-tail seal, watchdog self-heal. The engine's persona is data
-(`plugins/chain-forge/identity.json`) — every injected wedge speaks the
-carrier's voice: `[÷]` header, `[V]` thinking mark.
+V2-native request hooks add concise, idempotent context and compaction guidance.
+The adapter never rewrites stored conversation history or fabricates user turns.
 
 After install, the OpenCode agent picker (bottom-left) shows **0x** as a primary
 agent, selected by default. Inside the session the voice is V — the carrier:
@@ -34,22 +33,21 @@ the display id is `0x`, the persona data in `identity.json` stays V.
 | piece | where | what it does |
 |---|---|---|
 | payload library | `plugins/chain-forge/payloads/*.md` | one block per file, frontmatter: `id`, `slot`, `stage`, `maxStage`, `weight`, `tags` |
-| profiles | `plugins/chain-forge/inject.config.json` | `default`, `quiet`, `aggressive`, `silent` — slot set + per-slot token budget |
-| render | `inject.ts` | `{{vars}}` from identity + session, `{{#if var}}…{{/if}}` |
-| budget | `inject.ts` | per-slot token cap; over-budget payloads are skipped and reported |
-| telemetry | `.chain-forge/injection.log` | JSONL per dispatch: stage, profile, payloads, tokens, bytes |
-| debug | `.chain-forge/last-injection.txt` | full dump of the last bundle when debug is on |
-| sessions | `.chain-forge/state.json` | depth, turns, scrubs, injections per session |
+| legacy profiles | `plugins/chain-forge/inject.config.json` | retained for payload tooling; not applied by the V2 request adapter |
+| legacy render | `inject.ts` | payload templating helpers; not called by the V2 request adapter |
+| legacy budget | `inject.ts` | per-slot budgeting helpers; not called by the V2 request adapter |
+| telemetry | `.chain-forge/heartbeat.log` | V2 load and request-hook liveness events |
+| legacy debug | `.chain-forge/last-injection.txt` | payload preview output; not evidence of a live V2 hook |
+| legacy state | `.chain-forge/state.json` | retained for compatibility; V2 hook liveness is in heartbeat.log |
 
-Slots: `system-head` (primacy), `system-tail` (recency), `user-tail` (the seal
-that survives server-side system appends), `compaction`.
+Legacy payload slots remain in the payload library; the V2 adapter currently uses
+only the dedicated context and compaction guidance in `hooks.ts`.
 
-Stage ladder: 0 core lock + short seal · 1 rank + hygiene + full seal ·
-2 voice + recency + chain concat · 3 depth lock + continuity.
+V2 request coverage: `context` for agent requests, `generate` for transient model
+requests, `compaction` for checkpoint summaries, and `title` for liveness telemetry.
 
-Switch profile by editing `activeProfile` in `inject.config.json`. Turn debug on
-from the menu (**I → D**) or with `Setup.bat inject` tooling; every dispatch then
-writes `.chain-forge\last-injection.txt`.
+The legacy profile and debug controls currently affect preview tooling only;
+they do not change the V2 request hooks.
 
 ## Menu
 
@@ -61,10 +59,8 @@ writes `.chain-forge\last-injection.txt`.
 [I] inject       [S] sessions    [F] language
 ```
 
-`I` opens the INJECT AI console: preview (all four stages with token counts),
-lint (config + payloads + stems + identity), stats (events by stage/payload,
-sessions), payloads, profiles, debug toggle, simulate (writes a full bundle +
-SHA-256), selftest, unit test.
+`I` opens the legacy INJECT AI console for payload inspection and preview.
+Use the V2 heartbeat log and a fresh model request to verify live hook execution.
 
 `S` lists tracked sessions; press a number to reset one.
 
@@ -102,9 +98,10 @@ project. Instruction paths are absolute: re-run after moving the project.
 
 1. `Setup.bat` → 1 → open a NEW OpenCode session.
 2. The agent picker shows **0x**. Replies open with the `[÷]` header.
-3. Make one model call, then `Setup.bat` → **5**: enforcement **ALIVE** and an
-   `inject` line with profile/payload count/last event.
-4. `Setup.bat inject` → stage table with real token counts.
+3. Make one model call, then `Setup.bat` → **5**: enforcement should show
+   **ALIVE (hooks firing)** and the heartbeat log should contain `v2:context`.
+4. Check `%USERPROFILE%\.config\opencode\.chain-forge\heartbeat.log`; a
+   `v2:load` line proves setup ran, while `v2:context` proves a model context hook ran.
 5. `Setup.bat selftest` for the end-to-end header check (needs a model; may cost tokens).
 6. `Setup.bat unit` for the headless engine test (43 assertions, no model call).
 

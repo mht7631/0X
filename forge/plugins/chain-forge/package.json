@@ -2,7 +2,12 @@
   "name": "chain-forge",
   "private": true,
   "type": "module",
-  "version": "5.0.0",
-  "description": "0x INJECT AI — payload library, profiles, budget, telemetry and the depth-staged per-dispatch injection engine for the V persona. Zero runtime dependencies: structural typing only, so dependency drift can never fail plugin load.",
-  "dependencies": {}
+  "version": "5.1.0",
+  "description": "0x INJECT AI — OpenCode V2-native context and compaction guidance with idempotent hooks and local telemetry.",
+  "dependencies": {
+    "@opencode/plugin": "2.3.2"
+  },
+  "scripts": {
+    "test": "bun test"
+  }
 }

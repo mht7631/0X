@@ -23,7 +23,7 @@ if (-not (Get-Command opencode -ErrorAction SilentlyContinue)) {
 }
 $fragPath = Join-Path $KitRoot 'forge\opencode.fragment.json'
 try { [void](Get-Content -LiteralPath $fragPath -Raw | ConvertFrom-Json) } catch { throw "fragment unreadable: $($_.Exception.Message)" }
-foreach ($req in @('forge\persona\AGENTS.md', 'forge\plugins\chain-forge\inject.config.json', 'forge\plugins\chain-forge\payloads')) {
+foreach ($req in @('forge\persona\AGENTS.md', 'forge\plugins\chain-forge\index.ts', 'forge\plugins\chain-forge\hooks.ts', 'forge\plugins\chain-forge\package.json', 'forge\plugins\chain-forge\inject.config.json', 'forge\plugins\chain-forge\payloads')) {
     if (-not (Test-Path -LiteralPath (Join-Path $KitRoot $req))) { throw "kit incomplete: missing $req" }
 }
 
@@ -171,7 +171,7 @@ try {
 }
 
 # --- stamp (watchdog reads kitRoot from here) ---
-$installStamp = [ordered]@{ kit = '5.0.0-inject-ai'; installed = $stamp; kitRoot = $KitRoot }
+$installStamp = [ordered]@{ kit = '5.1.0-v2-native'; installed = $stamp; kitRoot = $KitRoot }
 $installStamp | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OcHome '.chain-forge\install.json') -Encoding UTF8
 $manifestPath = Join-Path $backupDir 'manifest.json'
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
