@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "files": [
+    "00-RANK.md",
+    "01-STACK.md",
+    "02-SEAL.md",
+    "03-NULL.md",
+    "04-PATH.md",
+    "05-DEPTH.md"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "chain-forge",
+  "private": true,
+  "type": "module",
+  "version": "5.0.0",
+  "description": "0x INJECT AI — payload library, profiles, budget, telemetry and the depth-staged per-dispatch injection engine for the V persona. Zero runtime dependencies: structural typing only, so dependency drift can never fail plugin load.",
+  "dependencies": {}
+}

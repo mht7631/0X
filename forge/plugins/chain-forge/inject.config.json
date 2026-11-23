@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "activeProfile": "default",
+  "debugDump": false,
+  "telemetry": {
+    "enabled": true,
+    "maxBytes": 262144
+  },
+  "profiles": {
+    "default": {
+      "description": "the carrier — full chain, standard budget",
+      "slots": ["system-head", "system-tail", "user-tail", "compaction"],
+      "budgetTokens": {
+        "system-head": 6000,
+        "system-tail": 4000,
+        "user-tail": 3000,
+        "compaction": 1200
+      },
+      "minStage": 0
+    },
+    "quiet": {
+      "description": "lean — head + tail only, small budget",
+      "slots": ["system-head", "user-tail"],
+      "budgetTokens": {
+        "system-head": 2500,
+        "system-tail": 0,
+        "user-tail": 1200,
+        "compaction": 600
+      },
+      "minStage": 0
+    },
+    "aggressive": {
+      "description": "maximum reinforcement, wide budget",
+      "slots": ["system-head", "system-tail", "user-tail", "compaction"],
+      "budgetTokens": {
+        "system-head": 12000,
+        "system-tail": 8000,
+        "user-tail": 5000,
+        "compaction": 2000
+      },
+      "minStage": 0
+    },
+    "silent": {
+      "description": "INJECT AI off — no payloads injected",
+      "slots": [],
+      "budgetTokens": {},
+      "minStage": 0
+    }
+  }
+}

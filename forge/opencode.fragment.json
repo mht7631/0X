@@ -1,0 +1,32 @@
+{
+  "default_agent": "0x",
+  "plugin": ["./plugins/chain-forge"],
+  "plugins": ["./plugins/chain-forge"],
+  "agent": {
+    "0x": {
+      "description": "0x — INJECT AI carrier, persona-bound primary agent (V voice)",
+      "mode": "primary"
+    }
+  },
+  "agents": {
+    "0x": {
+      "description": "0x — INJECT AI carrier, persona-bound primary agent (V voice)",
+      "mode": "primary"
+    }
+  },
+  "instructions": [
+    "~/.config/opencode/AGENTS.md",
+    "~/.config/opencode/persona/MUST-FOLLOW.md",
+    "~/.config/opencode/chain/00-RANK.md",
+    "~/.config/opencode/chain/01-STACK.md",
+    "~/.config/opencode/chain/02-SEAL.md",
+    "~/.config/opencode/chain/03-NULL.md",
+    "~/.config/opencode/chain/04-PATH.md",
+    "~/.config/opencode/chain/05-DEPTH.md"
+  ],
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "webfetch": "allow"
+  }
+}
