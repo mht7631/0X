@@ -221,6 +221,15 @@ function makeSystemEl(text: string, like: SystemEl | undefined): SystemEl {
   return text
 }
 
+function systemPartText(part: unknown): string {
+  if (typeof part === "string") return part
+  if (part && typeof part === "object") {
+    const value = (part as Record<string, unknown>).text
+    return typeof value === "string" ? value : ""
+  }
+  return ""
+}
+
 /** Marker-owned blocks are upserted in place; host-owned system entries remain intact. */
 const SYSTEM_HEAD_MARK = "<!-- chain-forge:v2:system-head -->"
 const SYSTEM_TAIL_MARK = "<!-- chain-forge:v2:system-tail -->"
@@ -234,7 +243,7 @@ function upsertSystemBlock(
 ): void {
   let first = -1
   for (let i = 0; i < arr.length; i++) {
-    if (!partText(arr[i]).includes(marker)) continue
+    if (!systemPartText(arr[i]).includes(marker)) continue
     if (!body) {
       arr.splice(i, 1)
       i--
