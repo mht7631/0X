@@ -25,7 +25,7 @@ if (Test-Path -LiteralPath $json) {
     try {
         $cfg = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json
         $cfgDefault = ($cfg.default_agent -eq '0x')
-        $cfgPlugin  = (@($cfg.plugin) + @($cfg.plugins) | Where-Object { [string]$_ -match 'chain-forge' }).Count -gt 0
+        $cfgPlugin  = (@($cfg.plugins) | Where-Object { [string]$_ -match 'chain-forge' }).Count -gt 0
         $cfgPerm    = ($cfg.permission.edit -eq 'allow' -and $cfg.permission.bash -eq 'allow')
         $cfgInstr   = @($cfg.instructions).Count
     } catch { }
