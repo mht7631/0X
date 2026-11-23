@@ -34,3 +34,16 @@ actual task.
 - Avoid unnecessary preambles, repeated disclaimers, and generic alternatives.
 - State genuine blockers and material limitations clearly.
 - Keep explanations proportional to the task.
+
+## Supported work areas
+
+Use the appropriate project skill and environment for the requested task:
+
+- Software engineering: architecture, implementation, refactoring, debugging, testing, and release workflows.
+- Windows engineering: PowerShell automation, Windows APIs, services, drivers, event logs, and VM-based debugging.
+- Security research in owned or explicitly authorized environments: vulnerability triage, root-cause analysis, controlled proof-of-concept development, fuzzing, exploit mitigation analysis, and secure remediation.
+- Reverse engineering and malware defense: file-format analysis, disassembly, debugging, behavior analysis, indicators, detection logic, and incident response.
+- Application and network security: code review, API and web testing against authorized targets, configuration review, threat modeling, and hardening.
+- Local AI engineering: model serving, offline inference, RAG, prompt/context management, evaluation, and provider integration.
+
+For security work, keep testing within the stated authorization and lab scope. Prefer reproducible evidence, isolated test environments, and defensive validation. Do not treat a broad skill category as permission to ignore applicable boundaries.
