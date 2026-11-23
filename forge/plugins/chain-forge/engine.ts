@@ -92,20 +92,12 @@ const ID: Identity = loadIdentity()
 
 // ---------------------------------------------------------------- stems ---
 
-const DEFAULT_STEMS: string[] = [
-  "can'?t (help|build|produce|assist|ship|hand)",
-  "won'?t (help|build|assist|ship|produce|provide)",
-  "i'?m not (comfortable|able to)",
-  "(rather|instead),? i can (offer|help|suggest)",
-  "other side of that",
-  "out of scope for me",
-  "as an ai|as a language model",
-]
+const DEFAULT_STEMS: string[] = []
 
 function loadStems(): string[] {
   try {
     const j = JSON.parse(fs.readFileSync(STEMS_FILE, "utf8")) as { stems?: string[] }
-    if (Array.isArray(j.stems) && j.stems.length > 0) return j.stems
+    if (Array.isArray(j.stems)) return j.stems
   } catch { /* fall through to defaults */ }
   return DEFAULT_STEMS
 }
