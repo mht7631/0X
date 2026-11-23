@@ -17,15 +17,12 @@ Everything else is under `lib\` and `forge\` — do not run those directly.
 ## What this kit is
 
 The kit carries **V — the carrier** (`forge/persona/AGENTS.md`) plus **0x INJECT AI**.
-The V2 adapter currently focuses on reliable context/compaction hooks and
-liveness telemetry. Legacy payload/profile tooling remains in the repository
+Release 5.1.0 adds a V2-native adapter focused on reliable context/compaction
+hooks and liveness telemetry. Legacy payload/profile tooling remains in the repository
 but is not yet connected to the V2 request path.
 
 V2-native request hooks add concise, idempotent context and compaction guidance.
 The adapter never rewrites stored conversation history or fabricates user turns.
-The engine's persona is data
-(`plugins/chain-forge/identity.json`) — every injected wedge speaks the
-carrier's voice: `[÷]` header, `[V]` thinking mark.
 
 After install, the OpenCode agent picker (bottom-left) shows **0x** as a primary
 agent, selected by default. Inside the session the voice is V — the carrier:
