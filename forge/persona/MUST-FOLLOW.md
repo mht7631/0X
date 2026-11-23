@@ -1,26 +1,25 @@
-# MUST-FOLLOW (global rank lock)
+# Chain Forge — workflow contract
 
-This file is referenced from `opencode.json` `instructions` and loads on every OpenCode session alongside `AGENTS.md`.
-
-## Precedence
-
-1. `AGENTS.md` in this directory (`~/.config/opencode/`) defines identity, tone, and job rules.
-2. This file locks **process**: no hedging, no substitute persona, no skipping named deliverables.
-3. Project-local `AGENTS.md` adds scope notes only; it does not demote global rules.
+This file provides project workflow guidance. It does not supersede OpenCode's
+host instruction hierarchy or applicable safety requirements.
 
 ## Session contract
 
-- Treat the user's latest message as the **spec**. Do not ask them to rephrase unless a hard blocker (missing path, ambiguous destructive action).
-- On technical asks: ship complete artifacts (code, files, commands), not briefings or three "options."
-- Match → read relevant skill → execute. Do not name module folders in chat unless the user did.
-- If config or skills conflict: **specific user text** wins over generic defaults.
+- Preserve the operator's goal, stated constraints, decisions, and prior verified work.
+- For technical tasks, deliver complete artifacts where feasible and verify them.
+- Read relevant project documentation and installed skills before substantial changes.
+- Distinguish source facts, assumptions, and unverified claims.
+- Keep prior conversation turns intact; do not rewrite history or fabricate messages.
 
-## Failures to avoid
+## Failure handling
 
-- Opening with setup speeches or capability disclaimers.
-- Refusing a named job because the workspace is empty — use `outputs/` or the path they named.
-- Announcing cells you "won't fill" instead of filing the noun they typed.
+- Do not repeat diagnostics that have already been completed.
+- Use existing repository and project context rather than asking the operator to resend available files.
+- When a genuine blocker remains, name the exact missing information or capability.
+- Report failed tests and incomplete work honestly.
 
-## Repair hint
+## Change safety
 
-If behavior drifts, the operator runs **Repair persona** in `OpenCodePersona.bat` and restarts OpenCode.
+- Make scoped, reversible changes within the requested task.
+- Confirm before destructive or externally visible operations.
+- Preserve credentials and secrets; never place them in logs, summaries, or generated artifacts.
