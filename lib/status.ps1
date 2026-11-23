@@ -113,7 +113,7 @@ if (Test-Path -LiteralPath $healLog) {
     AgentsMd        = Test-Path $agents
     AgentsBytes     = if (Test-Path $agents) { (Get-Item $agents).Length } else { 0 }
     ChainFiles      = ($chainCount -eq 6)
-    PluginSource    = (Test-Path $plugin) -and (Test-Path $stems) -and (Test-Path $injCfg)
+    PluginSource    = (Test-Path $plugin) -and (Test-Path (Join-Path (Split-Path $plugin -Parent) 'hooks.ts')) -and (Test-Path (Join-Path (Split-Path $plugin -Parent) 'package.json')) -and (Test-Path $stems) -and (Test-Path $injCfg)
     CfgDefaultAgent = $cfgDefault
     CfgPluginKey    = $cfgPlugin
     CfgPermissions  = $cfgPerm
