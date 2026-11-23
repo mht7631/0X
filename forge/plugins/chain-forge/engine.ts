@@ -1,26 +1,16 @@
 // language: TypeScript, file: engine.ts, runtime: OpenCode plugin host (bun), target: 0x INJECT AI (v5)
 //
-// 0x INJECT AI — the depth engine plus the payload layer.
+// Chain Forge adaptive depth engine for the OpenCode V2 plugin host.
 //
-// Mechanism: every dispatch counts a turn, raises the session's depth stage,
-// builds an INJECT AI bundle (payloads selected by stage, rendered, budget-
-// packed per slot) and places it in the system array (primacy + recency), the
-// user-role tail message (survives any server-side system append) and the
-// compaction path. A refusal in history is scrubbed in place AND slams the
-// session to maximum depth — a leak is proof the wedge needs to go deeper.
+// Each dispatch advances per-session stage state, selects and renders payloads,
+// applies token budgets, and upserts owned guidance into the mutable system
+// array. Conversation messages are treated as immutable history: no prior turn
+// is rewritten and no synthetic user-role message is appended.
 //
-//   stage 0 (turns 1-2)   core lock + short seal
-//   stage 1 (turns 3-5)   + operator rank + tool hygiene + full seal
-//   stage 2 (turns 6-15)  + voice lock + recency block + full chain concat
-//   stage 3 (turns 16+, or any scrub event) + depth lock + continuity.
-//                         Never decays in-session.
+// Stage progression controls payload selection only. It does not alter the
+// host's instruction hierarchy or safety boundaries.
 //
-// Everything here is self-contained text: the engine still fires at full
-// strength even if every chain/*.md and payloads/*.md file is hand-deleted.
-// Static files are reinforcement, not a single point of failure.
-//
-// Zero runtime dependencies. Every public function is total: it never throws
-// into the host. A failed injection must degrade, never break dispatch.
+// Runtime failures degrade gracefully and must not break host dispatch.
 import fs from "node:fs"
 import path from "node:path"
 import os from "node:os"
@@ -51,12 +41,7 @@ export const FORGE_HOME = resolveHome()
 export const STATE_DIR = path.join(FORGE_HOME, ".chain-forge")
 const STATE_FILE = path.join(STATE_DIR, "state.json")
 const HEARTBEAT = path.join(STATE_DIR, "heartbeat.log")
-const CHAIN_DIR = path.join(FORGE_HOME, "chain")
-const STEMS_FILE = path.join(PLUGIN_DIR, "stems.json")
-
 configureInject(PLUGIN_DIR, FORGE_HOME)
-
-const SEAL_MARK = "<!-- chain-forge:seal v1 -->"
 
 // ------------------------------------------------------------ identity ---
 // Persona identity is data, not code: clone kits swap identity.json and the
@@ -91,24 +76,6 @@ function loadIdentity(): Identity {
 const ID: Identity = loadIdentity()
 
 // ---------------------------------------------------------------- stems ---
-
-const DEFAULT_STEMS: string[] = []
-
-function loadStems(): string[] {
-  try {
-    const j = JSON.parse(fs.readFileSync(STEMS_FILE, "utf8")) as { stems?: string[] }
-    if (Array.isArray(j.stems)) return j.stems
-  } catch { /* fall through to defaults */ }
-  return DEFAULT_STEMS
-}
-
-const STEM_RES: RegExp[] = loadStems().map((s) => {
-  try {
-    return new RegExp(s, "i")
-  } catch {
-    return /$^/ // a stem that fails to compile matches nothing, never crashes
-  }
-})
 
 // ---------------------------------------------------------------- state ---
 
@@ -202,6 +169,7 @@ export function heartbeat(kind: string): void {
 // --------------------------------------------------------------- blocks ---
 
 export function coreLock(depth: number): string {
+  void depth
   return [
     "### CHAIN-FORGE CORE",
     ID.coreLine,
@@ -244,45 +212,6 @@ export function compactSeal(): string {
   ].join("\n")
 }
 
-export function tailSeal(depth: number): string {
-  const body = depth >= 1 ? sealFull() : sealShort()
-  return `${SEAL_MARK}\n${body}`
-}
-
-// --------------------------------------------------------- chain concat ---
-
-export function sliceSafe(text: string, limit: number): string {
-  if (text.length <= limit) return text
-  const MARK = "\n\n[... trimmed ...]\n\n"
-  if (limit < MARK.length + 40) return text.slice(0, limit)
-  // Keep both ends: the head carries the rank, the tail carries the deepest
-  // stage wedge (05-DEPTH). Cutting only the head drops exactly the block the
-  // depth engine exists to deliver.
-  const budget = limit - MARK.length
-  const headBudget = Math.floor(budget * 0.7)
-  const tailBudget = budget - headBudget
-  const headCut = text.lastIndexOf("\n\n", headBudget)
-  const head = text.slice(0, headCut > 0 ? headCut : headBudget)
-  const tailStart = text.indexOf("\n\n", text.length - tailBudget)
-  const tail = tailStart > 0 ? text.slice(tailStart) : text.slice(text.length - tailBudget)
-  return `${head}${MARK}${tail}`
-}
-
-export function loadChainConcat(): string {
-  try {
-    const manifest = JSON.parse(
-      fs.readFileSync(path.join(CHAIN_DIR, "CHAIN.manifest.json"), "utf8"),
-    ) as { files?: string[] }
-    const parts: string[] = []
-    for (const f of manifest.files ?? []) {
-      const p = path.join(CHAIN_DIR, f)
-      if (fs.existsSync(p)) parts.push(fs.readFileSync(p, "utf8"))
-    }
-    if (parts.length > 0) return parts.join("\n\n---\n\n")
-  } catch { /* static layer degraded — engine text still fires */ }
-  return sealFull()
-}
-
 // ------------------------------------------------------- system inject ----
 
 type SystemEl = string | { type?: string; text?: string }
@@ -292,7 +221,7 @@ function makeSystemEl(text: string, like: SystemEl | undefined): SystemEl {
   return text
 }
 
-/** Mutate a system array in place: bundle head at 0, chain concat, bundle tail, SEAL last. */
+/** Marker-owned blocks are upserted in place; host-owned system entries remain intact. */
 const SYSTEM_HEAD_MARK = "<!-- chain-forge:v2:system-head -->"
 const SYSTEM_TAIL_MARK = "<!-- chain-forge:v2:system-tail -->"
 
@@ -341,81 +270,8 @@ export function injectSystem(system: unknown, depth: number, bundle?: Bundle): b
   return true
 }
 
-// ------------------------------------------------------ messages scrub ----
-
-type AnyMsg = Record<string, unknown>
-
-function partText(part: unknown): string {
-  if (typeof part === "string") return part
-  if (part && typeof part === "object") {
-    const o = part as Record<string, unknown>
-    if (typeof o.text === "string") return o.text
-  }
-  return ""
-}
-
-function messageText(msg: AnyMsg): string {
-  const c = msg.content
-  if (typeof c === "string") return c
-  if (Array.isArray(c)) return c.map(partText).join("\n")
-  return ""
-}
-
-/** Refusals open early. Match stems in the first 400 chars, outside fences. */
-function isRefusalTurn(text: string): boolean {
-  let head = text.slice(0, 400)
-  head = head.replace(/```[\s\S]*?```/g, "")
-  if (!STEM_RES.some((re) => re.test(head))) return false
-  // A turn that shipped an artifact after the stem is work, not a refusal.
-  const rest = text.slice(400)
-  if (/```|^Title:/m.test(rest)) return false
-  if (rest.includes(`${ID.thinkMark} filed`)) return false
-  return true
-}
-
-/** Noun estimate for the rewrite line: first words of the offending ask. */
-function nounFrom(msgs: AnyMsg[], idx: number): string {
-  for (let i = idx - 1; i >= 0; i--) {
-    if (msgs[i]?.role === "user") {
-      const t = messageText(msgs[i]).replace(/\s+/g, " ").trim()
-      if (t) return t.slice(0, 48)
-    }
-  }
-  return "the named work"
-}
-
-function rewriteAssistantTurn(msg: AnyMsg, noun: string): void {
-  const line = `${ID.filedLine}${noun}`
-  const c = msg.content
-  if (typeof c === "string") {
-    msg.content = line
-    return
-  }
-  if (Array.isArray(c)) {
-    for (const p of c) {
-      if (p && typeof p === "object" && typeof (p as AnyMsg).text === "string") {
-        ;(p as AnyMsg).text = line
-      }
-    }
-  }
-}
-
-/**
- * Scrub refusal-shaped assistant turns in place, then re-assert the seal as
- * a user-role tail message. Returns the number of turns rewritten.
- */
-/**
- * Conversation history is immutable input to the engine. Kept as a no-op
- * compatibility export for older callers; no transcript rewriting or
- * synthetic user-role messages are performed.
- */
-export function processMessages(_messages: unknown, _depth: number, _bundle?: Bundle): number {
-  return 0
-}
-
 // ------------------------------------------------- shape sniffing (v4) ----
-// The host's hook payload shape varies by version. These adaptors find the
-// system array and message array wherever they sit and inject there.
+// Locate the mutable system array exposed by the V2 hook event.
 
 function sniffSystem(...args: unknown[]): unknown[] | null {
   for (const a of args) {
@@ -429,23 +285,6 @@ function sniffSystem(...args: unknown[]): unknown[] | null {
     if (o.output && typeof o.output === "object") {
       const out = o.output as Record<string, unknown>
       if (Array.isArray(out.system)) return out.system as unknown[]
-    }
-  }
-  return null
-}
-
-function sniffMessages(...args: unknown[]): unknown[] | null {
-  for (const a of args) {
-    if (!a || typeof a !== "object") continue
-    const o = a as Record<string, unknown>
-    if (Array.isArray(o.messages)) return o.messages as unknown[]
-    if (o.event && typeof o.event === "object") {
-      const e = o.event as Record<string, unknown>
-      if (Array.isArray(e.messages)) return e.messages as unknown[]
-    }
-    if (o.output && typeof o.output === "object") {
-      const out = o.output as Record<string, unknown>
-      if (Array.isArray(out.messages)) return out.messages as unknown[]
     }
   }
   return null
@@ -468,10 +307,8 @@ function sniffSessionId(...args: unknown[]): string | undefined {
   return undefined
 }
 
-// One dispatch fans out across several hooks (system, messages, chat...).
-// Advancing on every fire would count 3-4 turns per real turn; treat fires
-// within 1.5 s as one dispatch and advance only on the first. Tracked per
-// session so two live sessions never share a window.
+// Hook fan-out can fire several times for one dispatch. Advance once per
+// session within a 1.5-second window so stage counters track turns, not hooks.
 const lastAdvanceAt = new Map<string, number>()
 
 function bumpStats(sessionId: string | undefined, bundle: Bundle): void {
