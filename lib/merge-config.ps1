@@ -1,5 +1,5 @@
 ﻿# Merges forge\opencode.fragment.json into ~/.config/opencode/opencode.json (PS 5.1+)
-# v4: unions plugin+plugins arrays, absolutizes ~ instruction entries, prunes dead paths.
+# V2: normalizes the plugins array, removes the V1 plugin key, and prunes dead instruction paths.
 param(
     [Parameter(Mandatory = $true)][string]$OcHome,
     [Parameter(Mandatory = $true)][string]$FragmentPath
