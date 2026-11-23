@@ -1,6 +1,6 @@
 // language: TypeScript, file: engine.test.ts, target: Bun test runner
 import { describe, expect, test } from "bun:test"
-import { injectSystem, processMessages, sniffTurnKey } from "./engine"
+import { injectSystem, processMessages, sniffTurnKey, sliceSafe } from "./engine"
 import type { Bundle } from "./inject"
 
 function makeBundle(head: string, tail = "", userTail = ""): Bundle {
@@ -50,6 +50,34 @@ describe("Chain Forge adaptive engine", () => {
   })
 
 
+  test("injects staged chain context idempotently and removes it below stage two", () => {
+    const system: unknown[] = [{ type: "text", text: "host-owned instruction" }]
+    const bundle = makeBundle("core payload")
+
+    expect(injectSystem(system, 2, bundle, "chain context payload")).toBe(true)
+    expect(injectSystem(system, 2, bundle, "chain context payload")).toBe(true)
+    const rendered = system.map((part) =>
+      typeof part === "string" ? part : String((part as { text?: string }).text ?? ""),
+    ).join("\\n")
+    expect(rendered.match(/chain-forge:v2:chain/g)).toHaveLength(1)
+    expect(rendered).toContain("chain context payload")
+
+    injectSystem(system, 1, bundle, "chain context payload")
+    const afterDowngrade = system.map((part) =>
+      typeof part === "string" ? part : String((part as { text?: string }).text ?? ""),
+    ).join("\\n")
+    expect(afterDowngrade).not.toContain("chain-forge:v2:chain")
+    expect(afterDowngrade).toContain("host-owned instruction")
+  })
+
+  test("trims long chain context while retaining its head and tail", () => {
+    const source = "HEAD-" + "x".repeat(200) + "-TAIL"
+    const trimmed = sliceSafe(source, 80)
+    expect(trimmed.length).toBeLessThanOrEqual(80)
+    expect(trimmed.startsWith("HEAD-")).toBe(true)
+    expect(trimmed.endsWith("-TAIL")).toBe(true)
+    expect(trimmed).toContain("[... trimmed ...]")
+  })
   test("uses the latest user message ID as a stable turn key", () => {
     const event = {
       sessionID: "session-1",
