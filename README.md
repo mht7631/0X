@@ -20,8 +20,9 @@ The depth engine carrying **V — the carrier** (`forge/persona/AGENTS.md`, the
 full operating instruction) plus **0x INJECT AI** — a payload library, profile
 system, token budget, telemetry and debug surface for every dispatch.
 
-Same machinery as before: staged depth injection, history scrubbing, user-role
-tail seal, watchdog self-heal. The engine's persona is data
+V2-native request hooks add concise, idempotent context and compaction guidance.
+The adapter never rewrites stored conversation history or fabricates user turns.
+The engine's persona is data
 (`plugins/chain-forge/identity.json`) — every injected wedge speaks the
 carrier's voice: `[÷]` header, `[V]` thinking mark.
 
@@ -37,15 +38,15 @@ the display id is `0x`, the persona data in `identity.json` stays V.
 | profiles | `plugins/chain-forge/inject.config.json` | `default`, `quiet`, `aggressive`, `silent` — slot set + per-slot token budget |
 | render | `inject.ts` | `{{vars}}` from identity + session, `{{#if var}}…{{/if}}` |
 | budget | `inject.ts` | per-slot token cap; over-budget payloads are skipped and reported |
-| telemetry | `.chain-forge/injection.log` | JSONL per dispatch: stage, profile, payloads, tokens, bytes |
+| telemetry | `.chain-forge/heartbeat.log` | V2 load and request-hook liveness events |
 | debug | `.chain-forge/last-injection.txt` | full dump of the last bundle when debug is on |
 | sessions | `.chain-forge/state.json` | depth, turns, scrubs, injections per session |
 
-Slots: `system-head` (primacy), `system-tail` (recency), `user-tail` (the seal
-that survives server-side system appends), `compaction`.
+Legacy payload slots remain in the payload library; the V2 adapter currently uses
+only the dedicated context and compaction guidance in `hooks.ts`.
 
-Stage ladder: 0 core lock + short seal · 1 rank + hygiene + full seal ·
-2 voice + recency + chain concat · 3 depth lock + continuity.
+V2 request coverage: `context` for agent requests, `generate` for transient model
+requests, `compaction` for checkpoint summaries, and `title` for liveness telemetry.
 
 Switch profile by editing `activeProfile` in `inject.config.json`. Turn debug on
 from the menu (**I → D**) or with `Setup.bat inject` tooling; every dispatch then
@@ -104,7 +105,7 @@ project. Instruction paths are absolute: re-run after moving the project.
 2. The agent picker shows **0x**. Replies open with the `[÷]` header.
 3. Make one model call, then `Setup.bat` → **5**: enforcement **ALIVE** and an
    `inject` line with profile/payload count/last event.
-4. `Setup.bat inject` → stage table with real token counts.
+4. `Setup.bat inject` → legacy payload preview; it does not prove that a V2 hook fired.
 5. `Setup.bat selftest` for the end-to-end header check (needs a model; may cost tokens).
 6. `Setup.bat unit` for the headless engine test (43 assertions, no model call).
 
