@@ -41,6 +41,7 @@ export const FORGE_HOME = resolveHome()
 export const STATE_DIR = path.join(FORGE_HOME, ".chain-forge")
 const STATE_FILE = path.join(STATE_DIR, "state.json")
 const HEARTBEAT = path.join(STATE_DIR, "heartbeat.log")
+const CHAIN_DIR = path.join(FORGE_HOME, "chain")
 configureInject(PLUGIN_DIR, FORGE_HOME)
 
 // ------------------------------------------------------------ identity ---
@@ -213,6 +214,46 @@ export function compactSeal(): string {
   ].join("\n")
 }
 
+// --------------------------------------------------------- chain concat ---
+
+/**
+ * Retain staged chain-context loading without reintroducing transcript
+ * rewriting or refusal filtering. Missing files degrade to an empty chain.
+ */
+export function sliceSafe(text: string, limit: number): string {
+  if (text.length <= limit) return text
+  const marker = "\n\n[... trimmed ...]\n\n"
+  if (limit < marker.length + 40) return text.slice(0, limit)
+  const budget = limit - marker.length
+  const headBudget = Math.floor(budget * 0.7)
+  const tailBudget = budget - headBudget
+  const headCut = text.lastIndexOf("\n\n", headBudget)
+  const head = text.slice(0, headCut > 0 ? headCut : headBudget)
+  const tailStart = text.indexOf("\n\n", text.length - tailBudget)
+  const tail = tailStart > 0 ? text.slice(tailStart) : text.slice(text.length - tailBudget)
+  return head + marker + tail
+}
+
+export function loadChainConcat(): string {
+  try {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(CHAIN_DIR, "CHAIN.manifest.json"), "utf8"),
+    ) as { files?: string[] }
+    const parts: string[] = []
+    for (const file of manifest.files ?? []) {
+      // Reject manifest entries that resolve outside the local chain directory.
+      const target = path.resolve(CHAIN_DIR, file)
+      if (path.dirname(target) !== path.resolve(CHAIN_DIR)) continue
+      if (fs.existsSync(target) && fs.statSync(target).isFile()) {
+        parts.push(fs.readFileSync(target, "utf8"))
+      }
+    }
+    return parts.join("\n\n---\n\n")
+  } catch {
+    return ""
+  }
+}
+
 // ------------------------------------------------------- system inject ----
 
 type SystemEl = string | { type?: string; text?: string }
@@ -234,6 +275,7 @@ function systemPartText(part: unknown): string {
 /** Marker-owned blocks are upserted in place; host-owned system entries remain intact. */
 const SYSTEM_HEAD_MARK = "<!-- chain-forge:v2:system-head -->"
 const SYSTEM_TAIL_MARK = "<!-- chain-forge:v2:system-tail -->"
+const SYSTEM_CHAIN_MARK = "<!-- chain-forge:v2:chain -->"
 
 /** Upsert one owned system block while preserving host-owned instructions. */
 function upsertSystemBlock(
@@ -277,6 +319,8 @@ export function injectSystem(system: unknown, depth: number, bundle?: Bundle): b
 
   upsertSystemBlock(arr, SYSTEM_HEAD_MARK, head, like)
   upsertSystemBlock(arr, SYSTEM_TAIL_MARK, tail, like)
+  const chain = depth >= 2 ? sliceSafe(loadChainConcat(), 30_000) : ""
+  upsertSystemBlock(arr, SYSTEM_CHAIN_MARK, chain, like)
   return true
 }
 
