@@ -171,7 +171,7 @@ try {
 }
 
 # --- stamp (watchdog reads kitRoot from here) ---
-$installStamp = [ordered]@{ kit = '5.0.0-inject-ai'; installed = $stamp; kitRoot = $KitRoot }
+$installStamp = [ordered]@{ kit = '5.1.0-v2-native'; installed = $stamp; kitRoot = $KitRoot }
 $installStamp | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OcHome '.chain-forge\install.json') -Encoding UTF8
 $manifestPath = Join-Path $backupDir 'manifest.json'
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
