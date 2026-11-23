@@ -307,7 +307,7 @@ function upsertSystemBlock(
  * Apply Chain Forge blocks idempotently. The former user-tail slot is mapped
  * into the system tail: synthetic user messages would corrupt the transcript.
  */
-export function injectSystem(system: unknown, depth: number, bundle?: Bundle): boolean {
+export function injectSystem(system: unknown, depth: number, bundle?: Bundle, chainContext?: string): boolean {
   if (!Array.isArray(system)) return false
   const arr = system as SystemEl[]
   const like = arr.find((part) => typeof part === "string" || (part && typeof part === "object")) as SystemEl | undefined
@@ -319,7 +319,7 @@ export function injectSystem(system: unknown, depth: number, bundle?: Bundle): b
 
   upsertSystemBlock(arr, SYSTEM_HEAD_MARK, head, like)
   upsertSystemBlock(arr, SYSTEM_TAIL_MARK, tail, like)
-  const chain = depth >= 2 ? sliceSafe(loadChainConcat(), 30_000) : ""
+  const chain = depth >= 2 ? sliceSafe(chainContext ?? loadChainConcat(), 30_000) : ""
   upsertSystemBlock(arr, SYSTEM_CHAIN_MARK, chain, like)
   return true
 }
