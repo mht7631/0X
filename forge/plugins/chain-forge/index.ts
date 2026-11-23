@@ -1,7 +1,6 @@
 // language: TypeScript, file: index.ts, target: OpenCode 2.3.2 V2 plugin host
 import { Plugin } from "@opencode/plugin"
-import { heartbeat } from "./engine"
-import { applyCompactionInstruction, applyContextInstruction } from "./hooks"
+import { forgeHook, heartbeat } from "./engine"
 
 function observe(kind: string, action?: () => void): void {
   try {
@@ -19,27 +18,15 @@ export default Plugin.define({
     observe("load")
 
     await ctx.session.hook("context", (event) => {
-      observe("context", () => {
-        if (!applyContextInstruction(event)) {
-          throw new Error("context hook did not expose a mutable system array")
-        }
-      })
+      observe("context", () => forgeHook("context", event))
     })
 
     await ctx.session.hook("compaction", (event) => {
-      observe("compaction", () => {
-        if (!applyCompactionInstruction(event)) {
-          throw new Error("compaction hook did not expose a mutable system array")
-        }
-      })
+      observe("compaction", () => forgeHook("compaction", event))
     })
 
     await ctx.session.hook("generate", (event) => {
-      observe("generate", () => {
-        if (!applyContextInstruction(event)) {
-          throw new Error("generate hook did not expose a mutable system array")
-        }
-      })
+      observe("generate", () => forgeHook("generate", event))
     })
 
     await ctx.session.hook("title", () => {
