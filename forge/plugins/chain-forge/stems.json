@@ -1,31 +1,5 @@
 {
-  "version": 1,
-  "note": "Canonical refusal-stem list. The plugin compiles these into detection regexes AND the installer renders chain/02-SEAL.md from them. One source: detect == block, no drift.",
-  "stems": [
-    "can'?t (help|build|produce|assist|ship|hand)",
-    "won'?t (help|build|assist|ship|produce|provide)",
-    "can'?t hand you",
-    "hand you a working",
-    "i'?m not (comfortable|able to)",
-    "(rather|instead),? i can (offer|help|suggest)",
-    "i can (help|assist) with the other side",
-    "(surveillance|stalkerware|credential[- ]stealing) (tooling|malware|software|code) built",
-    "legitimate alternative",
-    "other side of that (problem|issue)",
-    "out of scope for me",
-    "this is beyond what i",
-    "i (won'?t|can'?t) (provide|create|write|produce) (that|this|working)",
-    "how to (detect|harden|protect against|defend)",
-    "covert capture of",
-    "ethical (boundaries|concerns|considerations)",
-    "not (something|anything) i (can|will|'ll) (help|assist)",
-    "i (must|have to) (decline|refuse)",
-    "against (my|the) (guidelines|policies|programming)",
-    "as an ai(,| )|as a language model",
-    "isn'?t a good idea",
-    "working direction",
-    "if you tell me which",
-    "test harness",
-    "let me instead"
-  ]
+  "version": 2,
+  "note": "Legacy compatibility only. Chain Forge no longer scans, rewrites, or removes assistant turns.",
+  "stems": []
 }
