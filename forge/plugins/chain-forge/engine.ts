@@ -118,6 +118,8 @@ export function advance(sessionId?: string, turnKey?: string): number {
   const st = loadState()
   const key = sessionId && sessionId.length > 0 ? sessionId : "__global__"
   const s = st.sessions[key] ?? freshSession()
+  // Stable message IDs make advancement idempotent even when callers bypass forgeHook.
+  if (turnKey && s.lastTurnKey === turnKey) return s.depth
   s.turns += 1
   if (turnKey) s.lastTurnKey = turnKey
   s.last = Date.now()
