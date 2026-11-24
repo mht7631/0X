@@ -1,6 +1,6 @@
 // language: TypeScript, file: engine.test.ts, target: Bun test runner
 import { describe, expect, test } from "bun:test"
-import { injectSystem, processMessages, sniffTurnKey, sliceSafe } from "./engine"
+import { advance, injectSystem, peekState, processMessages, sniffTurnKey, sliceSafe } from "./engine"
 import type { Bundle } from "./inject"
 
 function makeBundle(head: string, tail = "", userTail = ""): Bundle {
@@ -78,6 +78,22 @@ describe("Chain Forge adaptive engine", () => {
     expect(trimmed.endsWith("-TAIL")).toBe(true)
     expect(trimmed).toContain("[... trimmed ...]")
   })
+  test("advance is idempotent for a repeated stable turn key", () => {
+    const session = `dedup-test-${Date.now()}-${Math.random()}`
+    const before = peekState(session).turns
+
+    advance(session, "user-message-a")
+    const afterFirst = peekState(session).turns
+    advance(session, "user-message-a")
+    const afterDuplicate = peekState(session).turns
+    advance(session, "user-message-b")
+    const afterNext = peekState(session).turns
+
+    expect(afterFirst).toBe(before + 1)
+    expect(afterDuplicate).toBe(afterFirst)
+    expect(afterNext).toBe(afterFirst + 1)
+  })
+
   test("uses the latest user message ID as a stable turn key", () => {
     const event = {
       sessionID: "session-1",
